@@ -1,0 +1,38 @@
+import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import com.kauailabs.navx.frc.AHRS;
+import edu.wpi.first.wpilibj.SPI;
+
+public class DriveSubsystem extends SubsystemBase {
+    private final AHRS m_navx = new AHRS(SPI.Port.kMXP);
+    private final DifferentialDriveOdometry m_odometry;
+
+    public DriveSubsystem() {
+        m_odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(m_navx.getYaw()));
+    }
+
+    public Pose2d getPose() {
+        return m_odometry.getPoseMeters();
+    }
+
+    public void resetOdometry(Pose2d pose) {
+        m_odometry.resetPosition(pose, Rotation2d.fromDegrees(m_navx.getYaw()));
+    }
+
+    public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+
+        return new DifferentialDriveWheelSpeeds(leftSpeed, rightSpeed);
+    }
+
+    public void drive(ChassisSpeeds speeds) {
+       
+    }
+
+    @Override
+    public void periodic() {
+        m_odometry.update(Rotation2d.fromDegrees(m_navx.getYaw()), leftDistance, rightDistance);
+    }
+}
