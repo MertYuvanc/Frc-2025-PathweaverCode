@@ -1,0 +1,22 @@
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.Button;
+import edu.wpi.first.wpilibj.XboxController;
+
+public class RobotContainer {
+    private final DriveSubsystem m_driveSubsystem = new DriveSubsystem();
+    private final XboxController m_controller = new XboxController(0);
+
+    public RobotContainer() {
+        configureButtonBindings();
+    }
+
+    private void configureButtonBindings() {
+        
+        new Button(m_controller::getAButton).whenPressed(new ExampleCommand(m_driveSubsystem));
+    }
+
+    public Command getAutonomousCommand() {
+       
+        return new AutonomousCommand(m_driveSubsystem);
+    }
+}
