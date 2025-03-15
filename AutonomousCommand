@@ -1,0 +1,61 @@
+import edu.wpi.first.math.controller.LTVUnicycleController;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryUtil;
+import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.CommandBase;
+import java.nio.file.Path;
+
+public class AutonomousCommand extends CommandBase {
+    private final DriveSubsystem m_driveSubsystem;
+    private final LTVUnicycleController m_controller;
+    private Trajectory trajectory;
+
+    public AutonomousCommand(DriveSubsystem driveSubsystem) {
+        m_driveSubsystem = driveSubsystem;
+        m_controller = new LTVUnicycleController(
+            VecBuilder.fill(0.1, 0.1, 0.1), // Qelms
+            VecBuilder.fill(0.1, 0.1),     // Relms
+            0.02                           // dt
+        );
+        addRequirements(m_driveSubsystem);
+    }
+
+    @Override
+    public void initialize() {
+        // PathWeaver'dan yolu yükle
+        String trajectoryJSON = "paths/YourPathName.wpilib.json";
+        Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(trajectoryJSON);
+        trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+
+        // Robotun başlangıç pozisyonunu ayarla
+        m_driveSubsystem.resetOdometry(trajectory.getInitialPose());
+    }
+
+    @Override
+    public void execute() {
+      
+        var currentPose = m_driveSubsystem.getPose();
+
+        
+        var targetState = trajectory.sample(Timer.getFPGATimestamp());
+
+        
+        var chassisSpeeds = m_controller.calculate(currentPose, targetState);
+
+        
+        m_driveSubsystem.drive(chassisSpeeds);
+    }
+
+    @Override
+    public void end(boolean interrupted) {
+        
+        m_driveSubsystem.drive(new ChassisSpeeds(0, 0, 0));
+    }
+
+    @Override
+    public boolean isFinished() {
+        
+        return Timer.getFPGATimestamp() >= trajectory.getTotalTimeSeconds();
+    }
+}
